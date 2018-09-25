@@ -74,7 +74,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   private final ObjectRenderer virtualObjectShadow = new ObjectRenderer();
   private final PlaneRenderer planeRenderer = new PlaneRenderer();
   private final PointCloudRenderer pointCloudRenderer = new PointCloudRenderer();
-  private final StorageManager storageManager = new StorageManager();
+  private StorageManager storageManager;
 
   // Matrices pre-allocated here to reduce the number of allocations on every frame draw.
   private final float[] anchorMatrix = new float[16];
@@ -208,7 +208,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
                 dialog.setOkListener(this::onResolveOkPressed);
                 dialog.show(getSupportFragmentManager(),"Resolve");
             });
-
+    storageManager = new StorageManager(this);
   }
 
   @Override
@@ -338,7 +338,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
   private void checkUpdateAnchor(){
       synchronized (singleTapAnchorLock){
-          if (appAnchorState != AppAnchorState.HOSTING && appAnchorState != AppAnchorState.RESOLVINGgit){
+          if (appAnchorState != AppAnchorState.HOSTING && appAnchorState != AppAnchorState.RESOLVING){
               return;
           }
           Anchor.CloudAnchorState cloudState = anchor.getCloudAnchorState();
@@ -347,10 +347,18 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
                   snackbarHelper.showMessageWithDismiss(this,"Error hosting anchor: " + cloudState);
                   appAnchorState = AppAnchorState.NONE;
               } else if (cloudState == Anchor.CloudAnchorState.SUCCESS){
-                  int shortCode = storageManager.nextShortCode(this);
-                  storageManager.storeUsingShortCode(this,shortCode, anchor.getCloudAnchorId());
-                  snackbarHelper.showMessageWithDismiss(this,"Anchor hosted successfully!  Cloud Short Code: " + shortCode);
-                  appAnchorState = AppAnchorState.HOSTED;
+                 storageManager.nextShortCode(
+                         (shortCode) -> {
+                             if (shortCode == null) {
+                                 snackbarHelper.showMessageWithDismiss(this, "Could not obtain the code.");
+                                 return;
+                             }
+                             synchronized (singleTapAnchorLock) {
+                                 storageManager.storeUsingShortCode(shortCode, anchor.getCloudAnchorId());
+                                 snackbarHelper.showMessageWithDismiss(this, "Anchor hosted successfully! Cloud Short Code: " + shortCode);
+                             }
+                         });
+                          appAnchorState = AppAnchorState.HOSTED;
               }
           } else if (appAnchorState == AppAnchorState.RESOLVING){
               if (cloudState.isError()){
@@ -456,13 +464,14 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
   private void onResolveOkPressed(String dialogValue){
     int shortCode = Integer.parseInt(dialogValue);
-    String cloudAnchorId = storageManager.getCloudAncorID(this, shortCode);
-    synchronized (singleTapAnchorLock){
-        Anchor resolvedAnchor = session.resolveCloudAnchor(cloudAnchorId);
-        setNewAnchor(resolvedAnchor);
-        snackbarHelper.showMessage(this, "Now resolving anchor...");
-        appAnchorState = AppAnchorState.RESOLVING;
-    }
+    storageManager.getCloudAncorID(
+            shortCode, (cloudAnchorId) -> {
+                synchronized (singleTapAnchorLock){
+                    Anchor resolvedAnchor = session.resolveCloudAnchor(cloudAnchorId);
+                    setNewAnchor(resolvedAnchor);
+                    snackbarHelper.showMessage(this, "Now resolving anchor...");
+                    appAnchorState = AppAnchorState.RESOLVING;
+                }
+            });
   }
-
 }
