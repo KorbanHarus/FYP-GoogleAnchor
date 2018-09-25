@@ -26,6 +26,10 @@
   <string name="snackbar_camera_unavailable">Camera unavailable. Please restart the app.</string>
   <string name="snackbar_dismiss">Dismiss</string>
 
+  <string name="ok">OK</string>
+  <string name="cancel">Cancel</string>
+  <string name="resolve_dialog_title">Resolve Anchor</string>
+  <string name="resolve_button_text">Resolve</string>
   <!-- Strings used by UI components -->
   <string name="clear_button_string">Clear</string>
 </resources>

@@ -23,7 +23,6 @@
   <!-- This tag indicates that this application requires ARCore.  This results in the application
        only being visible in the Google Play Store on devices that support ARCore. -->
   <uses-feature android:name="android.hardware.camera.ar" android:required="true"/>
-  <meta-data android:name="com.google.android.ar.API_KEY" android:value="AIzaSyAzUSLreVN-93RQjoVJnJh_Qq2gb9nhkfU"/>
 
   <application
       android:allowBackup="false"
@@ -50,5 +49,6 @@
          Application code must still call ArCoreApk.requestInstall() before beginning an ARCore
          sessions, in case the user uninstalls ARCore for any reason. -->
     <meta-data android:name="com.google.ar.core" android:value="required" />
+    <meta-data android:name="com.google.android.ar.API_KEY" android:value="AIzaSyAzUSLreVN-93RQjoVJnJh_Qq2gb9nhkfU"/>
   </application>
 </manifest>

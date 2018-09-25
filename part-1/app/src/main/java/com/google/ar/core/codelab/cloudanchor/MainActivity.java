@@ -16,6 +16,7 @@
 
 package com.google.ar.core.codelab.cloudanchor;
 
+import android.app.FragmentManager;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
@@ -57,6 +58,7 @@ import java.io.IOException;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+
 /**
  * This is a simple example that shows how to create an augmented reality (AR) application using the
  * ARCore API. The application will display any detected planes and will allow the user to tap on a
@@ -72,6 +74,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   private final ObjectRenderer virtualObjectShadow = new ObjectRenderer();
   private final PlaneRenderer planeRenderer = new PlaneRenderer();
   private final PointCloudRenderer pointCloudRenderer = new PointCloudRenderer();
+  private final StorageManager storageManager = new StorageManager();
 
   // Matrices pre-allocated here to reduce the number of allocations on every frame draw.
   private final float[] anchorMatrix = new float[16];
@@ -101,7 +104,9 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   private enum AppAnchorState{
     NONE,
     HOSTING,
-    HOSTED
+    HOSTED,
+    RESOLVING,
+    RESOLVED
   }
 
   @GuardedBy("singleTapAnchorLock")
@@ -189,6 +194,21 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
             setNewAnchor(null);
           }
         });
+
+    Button resolveButton = findViewById(R.id.resolve_button);
+    resolveButton.setOnClickListener(
+            (unusedView) -> {
+                synchronized (singleTapAnchorLock){
+                    if (anchor != null){
+                        snackbarHelper.showMessageWithDismiss(this, "Please clear anchor first.");
+                        return;
+                    }
+                }
+                ResolveDialogFragment dialog = new ResolveDialogFragment();
+                dialog.setOkListener(this::onResolveOkPressed);
+                dialog.show(getSupportFragmentManager(),"Resolve");
+            });
+
   }
 
   @Override
@@ -318,17 +338,30 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
   private void checkUpdateAnchor(){
       synchronized (singleTapAnchorLock){
-          if (appAnchorState != AppAnchorState.HOSTING){
+          if (appAnchorState != AppAnchorState.HOSTING && appAnchorState != AppAnchorState.RESOLVINGgit){
               return;
           }
           Anchor.CloudAnchorState cloudState = anchor.getCloudAnchorState();
-          if (cloudState.isError()){
-              snackbarHelper.showMessageWithDismiss(this,"Error hosting anchor: " + cloudState);
-              appAnchorState = AppAnchorState.NONE;
-          } else if (cloudState == Anchor.CloudAnchorState.SUCCESS){
-              snackbarHelper.showMessageWithDismiss(this,"Anchor hosted successfully!  Cloud ID: " + anchor.getCloudAnchorId());
-              appAnchorState = AppAnchorState.HOSTED;
+          if (appAnchorState == AppAnchorState.HOSTING){
+              if (cloudState.isError()){
+                  snackbarHelper.showMessageWithDismiss(this,"Error hosting anchor: " + cloudState);
+                  appAnchorState = AppAnchorState.NONE;
+              } else if (cloudState == Anchor.CloudAnchorState.SUCCESS){
+                  int shortCode = storageManager.nextShortCode(this);
+                  storageManager.storeUsingShortCode(this,shortCode, anchor.getCloudAnchorId());
+                  snackbarHelper.showMessageWithDismiss(this,"Anchor hosted successfully!  Cloud Short Code: " + shortCode);
+                  appAnchorState = AppAnchorState.HOSTED;
+              }
+          } else if (appAnchorState == AppAnchorState.RESOLVING){
+              if (cloudState.isError()){
+                  snackbarHelper.showMessageWithDismiss(this,"Error hosting anchor: " + cloudState);
+                  appAnchorState = AppAnchorState.NONE;
+              } else if (cloudState == Anchor.CloudAnchorState.SUCCESS){
+                  snackbarHelper.showMessageWithDismiss(this,"Anchor hosted successfully! ");
+                  appAnchorState = AppAnchorState.RESOLVED;
+              }
           }
+
       }
   }
 
@@ -420,4 +453,16 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     appAnchorState = AppAnchorState.NONE;
     snackbarHelper.hide(this);
   }
+
+  private void onResolveOkPressed(String dialogValue){
+    int shortCode = Integer.parseInt(dialogValue);
+    String cloudAnchorId = storageManager.getCloudAncorID(this, shortCode);
+    synchronized (singleTapAnchorLock){
+        Anchor resolvedAnchor = session.resolveCloudAnchor(cloudAnchorId);
+        setNewAnchor(resolvedAnchor);
+        snackbarHelper.showMessage(this, "Now resolving anchor...");
+        appAnchorState = AppAnchorState.RESOLVING;
+    }
+  }
+
 }
