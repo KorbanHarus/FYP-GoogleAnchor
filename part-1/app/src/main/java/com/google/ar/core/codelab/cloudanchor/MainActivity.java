@@ -338,7 +338,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
   private void checkUpdateAnchor(){
       synchronized (singleTapAnchorLock){
-          if (appAnchorState != AppAnchorState.HOSTING && appAnchorState != AppAnchorState.RESOLVINGgit){
+          if (appAnchorState != AppAnchorState.HOSTING && appAnchorState != AppAnchorState.RESOLVING){
               return;
           }
           Anchor.CloudAnchorState cloudState = anchor.getCloudAnchorState();
