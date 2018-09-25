@@ -32,7 +32,6 @@ public class StorageManager {
     private static final String TAG = StorageManager.class.getName();
     private static final String KEY_ROOT_DIR = "shared_anchor_codelab_root";
     private static final String KEY_NEXT_SHORT_CODE = "next_short_code";
-    private static final String NEXT_SHORT_CODE = "next_short_code";
     private static final String KEY_PREFIX = "anchor";
     private static final int INITIAL_SHORT_CODE = 142;
     private final DatabaseReference rootRef;
@@ -49,9 +48,8 @@ public class StorageManager {
               .child(KEY_NEXT_SHORT_CODE)
               .runTransaction(
                       new Transaction.Handler() {
-                          @NonNull
                           @Override
-                          public Transaction.Result doTransaction(@NonNull MutableData currentData) {
+                          public Transaction.Result doTransaction(MutableData currentData) {
                               Integer shortCode = currentData.getValue(Integer.class);
                               if (shortCode == null) {
                                   shortCode = INITIAL_SHORT_CODE - 1;
@@ -61,9 +59,11 @@ public class StorageManager {
                           }
 
                           @Override
-                          public void onComplete(@Nullable DatabaseError error, boolean committed, @Nullable DataSnapshot currentData) {
+                          public void onComplete(DatabaseError error, boolean committed, DataSnapshot currentData) {
                               if (!committed) {
                                   Log.e(TAG, "Firebase Error", error.toException());
+                                  listener.onShortCodeAvailable(currentData.getValue(Integer.class));
+                              } else {
                                   listener.onShortCodeAvailable(currentData.getValue(Integer.class));
                               }
                           }
@@ -81,13 +81,13 @@ public class StorageManager {
                .addListenerForSingleValueEvent(
                        new ValueEventListener() {
                            @Override
-                           public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                           public void onDataChange(DataSnapshot dataSnapshot) {
                                listener.onCloudAnchorIdAvailable(String.valueOf(dataSnapshot.getValue()));
                            }
 
                            @Override
-                           public void onCancelled(@NonNull DatabaseError error) {
-                                Log.e(TAG, "The database operation for getCloudAnchorID was cancelled.",
+                           public void onCancelled(DatabaseError error) {
+                                Log.e(TAG, "The database operation for get CloudAnchorID was cancelled.",
                                         error.toException());
                                 listener.onCloudAnchorIdAvailable(null);
                            }
