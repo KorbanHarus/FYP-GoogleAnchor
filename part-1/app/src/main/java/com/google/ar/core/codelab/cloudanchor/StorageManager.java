@@ -2,6 +2,7 @@ package com.google.ar.core.codelab.cloudanchor;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -40,10 +41,12 @@ public class StorageManager {
     StorageManager(Context context){
         FirebaseApp firebaseApp = FirebaseApp.initializeApp(context);
         rootRef = FirebaseDatabase.getInstance(firebaseApp).getReference().child(KEY_ROOT_DIR);
+        Log.i("storagemanager", "StorageManager: "+rootRef.toString());
         rootRef.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                 System.out.print(dataSnapshot + " : " + s);
+                Log.i("dataSnapshot", "dataSnapshot"+dataSnapshot.toString());
             }
 
             @Override
