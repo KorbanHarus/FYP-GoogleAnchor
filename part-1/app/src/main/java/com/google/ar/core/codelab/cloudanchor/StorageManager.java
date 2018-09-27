@@ -42,31 +42,42 @@ public class StorageManager {
         FirebaseApp firebaseApp = FirebaseApp.initializeApp(context);
         rootRef = FirebaseDatabase.getInstance(firebaseApp).getReference().child(KEY_ROOT_DIR);
         Log.i("storagemanager", "StorageManager: "+rootRef.toString());
-        rootRef.addChildEventListener(new ChildEventListener() {
+//        rootRef.addChildEventListener(new ChildEventListener() {
+//            @Override
+//            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+//                System.out.print(dataSnapshot + " : " + s);
+//                Log.i("dataSnapshot", "dataSnapshot"+dataSnapshot.toString());
+//            }
+//
+//            @Override
+//            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+//
+//            }
+//
+//            @Override
+//            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+//
+//            }
+//
+//            @Override
+//            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+//
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//            }
+//        });
+        rootRef.addValueEventListener(new ValueEventListener() {
             @Override
-            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                System.out.print(dataSnapshot + " : " + s);
-                Log.i("dataSnapshot", "dataSnapshot"+dataSnapshot.toString());
-            }
-
-            @Override
-            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
-            }
-
-            @Override
-            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-
-            }
-
-            @Override
-            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                Log.i("mydbrefonDataChange", "onDataChange: " + dataSnapshot.toString());
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-
+                Log.e("databaseError", "onCancelled: " + databaseError );
             }
         });
         DatabaseReference.goOnline();

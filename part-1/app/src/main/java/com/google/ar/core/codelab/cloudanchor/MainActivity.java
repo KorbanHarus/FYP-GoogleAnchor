@@ -21,6 +21,7 @@ import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.support.annotation.GuardedBy;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -54,6 +55,13 @@ import com.google.ar.core.exceptions.CameraNotAvailableException;
 import com.google.ar.core.exceptions.UnavailableApkTooOldException;
 import com.google.ar.core.exceptions.UnavailableArcoreNotInstalledException;
 import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
 import java.io.IOException;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -92,6 +100,8 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   private final SnackbarHelper snackbarHelper = new SnackbarHelper();
   private GestureDetector gestureDetector;
   private DisplayRotationHelper displayRotationHelper;
+  //private DatabaseReference mydbref;
+
 
   // ARCore components
   private Session session;
@@ -209,6 +219,20 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
                 dialog.show(getSupportFragmentManager(),"Resolve");
             });
     storageManager = new StorageManager(this);
+
+    //mydbref = FirebaseDatabase.getInstance(FirebaseApp.initializeApp(this)).getReference().child("shared_anchor_codelab_root");
+//    mydbref.addValueEventListener(new ValueEventListener() {
+//      @Override
+//      public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//        Log.i("mydbrefonDataChange", "onDataChange: " + dataSnapshot.toString());
+//      }
+//
+//      @Override
+//      public void onCancelled(@NonNull DatabaseError databaseError) {
+//        Log.e("databaseError", "onCancelled: " + databaseError );
+//      }
+//    });
+
   }
 
   @Override
